@@ -3,8 +3,7 @@ from datetime import date
 
 import yfinance as yf
 from prophet import Prophet
-from prophet.plot import plot_plotly
-from plotly import graph_objs as go
+import plotly.graph_objs as go
 
 START = "2019-01-01"
 TODAY = date.today().strftime("%Y-%m-%d")
@@ -18,7 +17,7 @@ def main():
     n_years = st.slider('Years of prediction:', 1, 4)
     period = n_years * 365
 
-    @st.cache
+    @st.cache_data()
     def load_data(ticker):
         data = yf.download(ticker, START, TODAY)
         data.reset_index(inplace=True)
@@ -50,8 +49,7 @@ def main():
 
     # Display forecast plot
     st.write(f'Forecast plot for {n_years} years')
-    fig1 = plot_plotly(m, forecast)
-    st.plotly_chart(fig1)
+    plot_forecast_data(forecast)
 
     # Display forecast components
     st.write("Forecast components")
@@ -63,7 +61,17 @@ def plot_raw_data(data):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=data['Date'], y=data['Open'], name="stock_open"))
     fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], name="stock_close"))
-    fig.layout.update(title_text='Time Series data with Rangeslider', xaxis_rangeslider_visible=True)
+    fig.update_layout(title_text='Time Series data with Rangeslider', xaxis_rangeslider_visible=True)
+    st.plotly_chart(fig)
+
+def plot_forecast_data(forecast):
+    # Plotting forecast data
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], name='Forecast'))
+    fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_lower'], fill='tonexty', mode='none', name='Forecast Lower Bound'))
+    fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_upper'], fill='tonexty', mode='none', name='Forecast Upper Bound'))
+    fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], line=dict(color='orange'), mode='lines', name='Forecast'))
+    fig.update_layout(title_text='Stock Price Forecast', xaxis_title='Date', yaxis_title='Price')
     st.plotly_chart(fig)
 
 if __name__ == "__main__":
