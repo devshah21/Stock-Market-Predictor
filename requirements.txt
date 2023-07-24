@@ -1,0 +1,5 @@
+prophet == 1.1.1
+holidays == 0.18.0
+yfinance
+streamlit
+plotly
