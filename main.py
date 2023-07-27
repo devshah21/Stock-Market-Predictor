@@ -4,10 +4,15 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objs as go
 from sklearn.preprocessing import MinMaxScaler
-import tensorflow
+from sklearn.metrics import mean_absolute_error
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 from tensorflow.keras.optimizers import Adam
+from tensorflow import keras
+from tensorflow.keras.layers import Bidirectional, Dropout, Activation, Dense, LSTM
+from tensorflow.compat.v1.keras.layers import CuDNNLSTM
+from tensorflow.keras.models import Sequential
 from datetime import date
 
 START = "2019-01-01"
@@ -66,15 +71,34 @@ def prepare_data(df_train):
 
     return X, y, scaler
 
+seq_len = 60
+dropout = 0.2
+window_size = seq_len - 1
 
 def create_lstm_model(input_shape):
-    model = Sequential()
-    model.add(LSTM(units=50, return_sequences=True, input_shape=input_shape))
-    model.add(LSTM(units=50, return_sequences=False))
-    model.add(Dense(units=25))
+    model = tf.keras.Sequential()
+
+    model.add(
+        LSTM(window_size, return_sequences=True, input_shape=input_shape)
+    )
+
+    model.add(Dropout(rate=dropout))
+    # Bidirectional allows for training of sequence data forwards and backwards
+    model.add(
+        Bidirectional(LSTM((window_size * 2), return_sequences=True))
+    )
+
+    model.add(Dropout(rate=dropout))
+    model.add(
+        Bidirectional(LSTM(window_size, return_sequences=False))
+    )
+
     model.add(Dense(units=1))
+    # Linear activation function: activation is proportional to the input
+    model.add(Activation('linear'))
 
     return model
+
 
 
 def main():
@@ -109,7 +133,7 @@ def main():
     model = create_lstm_model(input_shape)
 
     # Compile and fit the model
-    model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss='mean_squared_error')
     model.fit(X, y, epochs=50, batch_size=32)
 
     # Forecast using the fitted model
