@@ -3,3 +3,4 @@ holidays == 0.18.0
 yfinance
 streamlit
 plotly
+tensorflow
