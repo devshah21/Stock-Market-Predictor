@@ -104,7 +104,7 @@ def create_lstm_model(input_shape):
 def main():
     st.title('Stock Forecast App')
 
-    stocks = ('GOOG', 'AAPL', 'MSFT', 'GME')
+    stocks = ('GOOG', 'AAPL', 'MSFT', 'GME', 'AMZN', 'TSLA', 'NFLX')
     selected_stock = st.selectbox('Select dataset for prediction', stocks)
 
     n_years = st.slider('Years of prediction:', 1, 4)
